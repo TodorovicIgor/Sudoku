@@ -1,4 +1,10 @@
 class Pen(val x: Int, val y: Int) extends Position {
+  /*
+  ------>x
+  |
+  |
+  v y
+  * */
   def goUp(): Pen = {
     this.y match{
       case 8 => new Pen(this.x, this.y)
@@ -23,6 +29,16 @@ class Pen(val x: Int, val y: Int) extends Position {
       case _ => new Pen(this.x+1, this.y)
     }
   }
+  def ++() : Pen = {
+    this.x match{
+      case 8 => this.y match{
+        case 8 => new Pen(0, 0)
+        case _ => new Pen(0, this.y+1)
+      }
+      case _ => this.goLeft()
+    }
+  }
+
 }
 
 //object test {
