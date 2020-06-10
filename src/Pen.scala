@@ -19,14 +19,14 @@ class Pen(val x: Int, val y: Int) extends Position {
   }
   def goLeft(): Pen = {
     this.x match{
-      case 8 => new Pen(this.x, this.y)
-      case _ => new Pen(this.x+1, this.y)
+      case 0 => new Pen(this.x, this.y)
+      case _ => new Pen(this.x-1, this.y)
     }
   }
   def goRight(): Pen = {
     this.x match{
-      case 0 => new Pen(this.x, this.y)
-      case _ => new Pen(this.x-1, this.y)
+      case 8 => new Pen(this.x, this.y)
+      case _ => new Pen(this.x+1, this.y)
     }
   }
   def ++() : Pen = {
@@ -35,7 +35,7 @@ class Pen(val x: Int, val y: Int) extends Position {
         case 8 => new Pen(0, 0)
         case _ => new Pen(0, this.y+1)
       }
-      case _ => this.goLeft()
+      case _ => this.goRight()
     }
   }
 

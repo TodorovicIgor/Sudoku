@@ -18,26 +18,26 @@ class Table(val content: List[List[Field]], val pen: Pen) {
     println("----------------------")
     println("x=" + x + " y=" + y + " val=" + _val)
     if (_overrideValue) {
-      var rows = content.slice(0, x)
-      var row = content(x).slice(0, y)
-      row = row ::: List(new Field(x, y, v = _val.toString, isOriginal = true))
-      row = row ::: content(x).slice(y + 1, content(x).length)
-      rows = rows ::: List(row) ::: content.slice(x + 1, content.length)
+      var rows = content.slice(0, y)
+      var row = content(y).slice(0, x)
+      row = row ::: List(new Field(y, x, v = _val.toString, isOriginal = true)) //????????????????
+      row = row ::: content(y).slice(x + 1, content(x).length)
+      rows = rows ::: List(row) ::: content.slice(y + 1, content.length)
       new Table(rows, pen)
     }
-    else if (!content(x)(y).isOriginal && !ifAvailable) {
-      var rows = content.slice(0, x)
-      var row = content(x).slice(0, y)
-      row = row ::: List(new Field(x, y, v = _val.toString, isOriginal = false))
-      row = row ::: content(x).slice(y + 1, content(x).length)
-      rows = rows ::: List(row) ::: content.slice(x + 1, content.length)
+    else if (!content(y)(x).isOriginal && !ifAvailable) {
+      var rows = content.slice(0, y)
+      var row = content(y).slice(0, x)
+      row = row ::: List(new Field(y, x, v = _val.toString, isOriginal = false))
+      row = row ::: content(y).slice(x + 1, content(x).length)
+      rows = rows ::: List(row) ::: content.slice(y + 1, content.length)
       new Table(rows, pen)
     }
-    else if (!content(x)(y).isOriginal && ifAvailable) {
+    else if (!content(y)(x).isOriginal && ifAvailable) {
       val intContent = this.mapToInts()
       val transposedIntContent = this.mapTransposeToInts()
-      //      println(intContent)
-      //      println(transposedIntContent)
+      println("intContent" + intContent)
+      println("transposedIntContent" + transposedIntContent)
       //      System.exit(0)
 
       def hasConflicts(): Boolean = {
@@ -45,15 +45,15 @@ class Table(val content: List[List[Field]], val pen: Pen) {
           intContent.slice(x, x + 3).map(_.slice(y, y + 3))
         }
 
-//        println("_val.toInt " + _val.asDigit)
-//        println("row " + intContent(x).contains(_val.asDigit))
-//        println("col " + transposedIntContent(y).contains(_val.asDigit))
-//        println("square " + getSubMatrix(x / 3 * 3, y / 3 * 3).flatten.contains(_val.asDigit))
-//        println("content(x) " + intContent(x))
-//        println("transposedIntContent(y) " + transposedIntContent(y))
-//        println("getSubMatrix(x / 3 * 3, y / 3 * 3).flatten " + getSubMatrix(x / 3 * 3, y / 3 * 3).flatten)
-        if (intContent(x).contains(_val.asDigit) ||
-          transposedIntContent(y).contains(_val.asDigit) ||
+        println("_val.toInt " + _val.asDigit)
+        println("row " + intContent(y).contains(_val.asDigit))
+        println("col " + transposedIntContent(x).contains(_val.asDigit))
+        println("square " + getSubMatrix(x / 3 * 3, y / 3 * 3).flatten.contains(_val.asDigit))
+        println("content(y) " + intContent(y))
+        println("transposedIntContent(x) " + transposedIntContent(x))
+        println("getSubMatrix(x / 3 * 3, y / 3 * 3).flatten " + getSubMatrix(x / 3 * 3, y / 3 * 3).flatten)
+        if (intContent(y).contains(_val.asDigit) ||
+          transposedIntContent(x).contains(_val.asDigit) ||
           getSubMatrix(x / 3 * 3, y / 3 * 3).flatten.contains(_val.asDigit)) {
           true
         }
@@ -62,18 +62,18 @@ class Table(val content: List[List[Field]], val pen: Pen) {
         }
       }
 
-      println(hasConflicts())
+      //      println(hasConflicts())
       if (!hasConflicts()) {
-        var rows = content.slice(0, x)
-        var row = content(x).slice(0, y)
-        row = row ::: List(new Field(x, y, v = _val.toString, isOriginal = false))
-        row = row ::: content(x).slice(y + 1, content(x).length)
-        rows = rows ::: List(row) ::: content.slice(x + 1, content.length)
+        var rows = content.slice(0, y)
+        var row = content(y).slice(0, x)
+        row = row ::: List(new Field(y, x, v = _val.toString, isOriginal = false))
+        row = row ::: content(y).slice(x + 1, content(x).length)
+        rows = rows ::: List(row) ::: content.slice(y + 1, content.length)
         new Table(rows, pen)
       }
       else {
-        println("old val " + _val)
-        println("new val " + (_val.asDigit + 1).toString.charAt(0))
+        //        println("old val " + _val)
+        //        println("new val " + (_val.asDigit + 1).toString.charAt(0))
         if (_val.asDigit == 9) {
           this
         } else {
@@ -113,7 +113,7 @@ class Table(val content: List[List[Field]], val pen: Pen) {
   }
 
   def solve(): Table = {
-    // TODO class solver and class moves sequence
+    @scala.annotation.tailrec
     def movePenAndIncField(_table: Table): Table = {
       val pen = _table.pen.++()
       //      println(_table.pen.x, _table.pen.y, pen.x, pen.y)
@@ -169,20 +169,32 @@ class Table(val content: List[List[Field]], val pen: Pen) {
 
     def checkRows(): Boolean = {
       for (line <- intContent) {
-        if (line.contains(0)) return false
+        if (line.contains(0)) {
+          println("line" + line)
+          return false
+        }
       }
       intContent.foreach(line => {
-        if (line.distinct.length != 9) return false
+        if (line.distinct.length != 9) {
+          println("line.distinct" + line.distinct)
+          return false
+        }
       })
       true
     }
 
     def checkCols(): Boolean = {
       for (line <- transposedIntContent) {
-        if (line.contains(0)) return false
+        if (line.contains(0)) {
+          println("line" + line)
+          return false
+        }
       }
       transposedIntContent.foreach(line => {
-        if (line.distinct.length != 9) return false
+        if (line.distinct.length != 9) {
+          println("line.distinct" + line.distinct)
+          return false
+        }
       })
       true
     }
@@ -190,13 +202,15 @@ class Table(val content: List[List[Field]], val pen: Pen) {
     def checkSquares(): Boolean = {
       //NOTICE: checkSquares DOES NOT check for zeroes, always call rows and cols BEFORE squares
       def getSubMatrix(x: Int, y: Int): List[List[Int]] = {
-        //        intContent.slice(x, x + 3).slice(y, y + 3)
         intContent.slice(x, x + 3).map(_.slice(y, y + 3))
       }
 
       for (x <- List(0, 3, 6);
            y <- List(0, 3, 6)) {
-        if (getSubMatrix(x, y).distinct.length != 9) return false
+        if (getSubMatrix(x, y).flatten.distinct.length != 9) {
+          print("submatrix"+getSubMatrix(x,y).distinct)
+          return false
+        }
       }
       checkCols() && checkRows()
     }
@@ -204,30 +218,79 @@ class Table(val content: List[List[Field]], val pen: Pen) {
     checkSquares()
   }
 
+  def filterColumnAndRow(): Table = {
+    val v = content(pen.y)(pen.x)
+    var rows = List[List[Field]]()
+    for (i <- 0 to 8) {
+      var row = List[Field]()
+      for (j <- 0 to 8) {
+        //        println("i"+i+", peny"+pen.y+", j"+j+", penx"+pen.x+", content"+content(i)(j)+", v"+v)
+        if ((i == pen.y || j == pen.x) && content(i)(j).getVal == v.getVal) {
 
-  // filterColumnAndRow()
+          row = row ::: List(new Field(x = j, y = i, v = "-"))
+        }
+        else {
+          row = row ::: List(content(i)(j))
+        }
+      }
+      rows = rows ::: List(row)
+    }
+    new Table(rows, pen)
+    //      val row = content.slice(0, pen.x)
+    //      val aux = content(pen.x).map( item => {
+    //        if (item == v) new Field(x=item.x, y=item.y, v = "-")
+    //        else new Field(x=item.x, y=item.y, v = item.v)
+    //      })
+    //      val row2 = row ::: aux
+    //      val row3 = row2 ::: content.slice(pen.x+1, content.length)
+    //      new Table(row3, pen)
+  }
+
+  def filterSubMatrix(): Table = ???
+
+  //    val intContent = this.mapToInts()
+  //    def getSubMatrix(x: Int, y: Int): List[List[Int]] = {
+  //      intContent.slice(x, x + 3).map(_.slice(y, y + 3))
+  //    }
+  //
+  //  }
+
+
   // filterSubMatrix()
+
+
   // TODO executeMoves()
   // TODO isSolvable()
   // TODO createOpSequence()
   override def toString: String = {
     val ret = new StringBuilder()
-    for (line <- content) {
-      for (element <- line) {
-        ret.append(element.toString)
+    for (lineIndex <- 0 until content.length) {
+      for (columnIndex <- 0 until content(lineIndex).length) {
+        if (lineIndex == pen.y && columnIndex == pen.x) {
+          ret.append("\u0332")
+        }
+        ret.append(content(lineIndex)(columnIndex).toString)
       }
       ret.append('\n')
     }
+    //    for (line <- content) {
+    //      for (element <- line) {
+    //        ret.append(element.toString)
+    //        ret.append("\u0332")
+    //      }
+    //      ret.append('\n')
+    //    }
+
     ret.toString()
   }
 }
 
 
-object test {
+object FileReader {
   def readTableFromFile(fileName: String): Table = {
     val source = io.Source.fromFile(fileName)
     var rows = List[List[Field]]()
-    val pen = new Pen(0, 0)
+    var pen = new Pen(0, 0)
     var yCoord = 0
     for (line <- source.getLines) {
       var xCoord = 0
@@ -235,9 +298,8 @@ object test {
       for (char <- line.toCharArray) {
         val newField = char match {
           case 'P' =>
-            val pen = new Pen(x = xCoord, y = yCoord)
+            pen = new Pen(x = xCoord, y = yCoord)
             List(new Field(x = xCoord, y = yCoord, v = "-", isOriginal = false))
-
           case '-' => List(new Field(x = xCoord, y = yCoord, v = "-", isOriginal = false))
           case _ => List(new Field(x = xCoord, y = yCoord, v = char.toString, isOriginal = true))
         }
@@ -253,8 +315,10 @@ object test {
 
   def main(args: Array[String]): Unit = {
     val t1 = readTableFromFile("input/empty.tbl")
-    print(t1.toString)
-    //    print(t1.exchange().toString)
+    println(t1.toString)
+    //    val t2 = t1.setPenPosition(8,0)
+    //    println("----------------")
+    //    println(t2.filterColumnAndRow().toString)
     print(t1.solve())
   }
 }
