@@ -1,3 +1,5 @@
+import java.io.PrintWriter
+
 class Table(val content: List[List[Field]], val pen: Pen) {
   def movePen(direction: Char): Table = {
     direction match {
@@ -15,12 +17,11 @@ class Table(val content: List[List[Field]], val pen: Pen) {
   }
 
   def writeField(x: Int, y: Int, _val: Char, _overrideValue: Boolean = false, ifAvailable: Boolean = false): Table = {
-    println("----------------------")
-    println("x=" + x + " y=" + y + " val=" + _val)
+    //    println("----------------------")
     if (_overrideValue) {
       var rows = content.slice(0, y)
       var row = content(y).slice(0, x)
-      row = row ::: List(new Field(y, x, v = _val.toString, isOriginal = true)) //????????????????
+      row = row ::: List(new Field(y, x, v = _val.toString, isOriginal = true))
       row = row ::: content(y).slice(x + 1, content(x).length)
       rows = rows ::: List(row) ::: content.slice(y + 1, content.length)
       new Table(rows, pen)
@@ -101,10 +102,10 @@ class Table(val content: List[List[Field]], val pen: Pen) {
           case "-" => new Field(field.x, field.y, v = "-", isOriginal = false)
           case _ =>
             if (field.getVal == "9") {
-              new Field(field.x, field.y, v = "-", isOriginal = true)
+              new Field(field.x, field.y, v = "1", isOriginal = true)
             }
             else {
-              new Field(field.x, field.y, v = (9 - field.getVal.toInt).toString, isOriginal = true)
+              new Field(field.x, field.y, v = (10 - field.getVal.toInt).toString, isOriginal = true)
             }
         }
       })
@@ -170,13 +171,13 @@ class Table(val content: List[List[Field]], val pen: Pen) {
     def checkRows(): Boolean = {
       for (line <- intContent) {
         if (line.contains(0)) {
-          println("line" + line)
+          //          println("line" + line)
           return false
         }
       }
       intContent.foreach(line => {
         if (line.distinct.length != 9) {
-          println("line.distinct" + line.distinct)
+          //          println("line.distinct" + line.distinct)
           return false
         }
       })
@@ -186,13 +187,13 @@ class Table(val content: List[List[Field]], val pen: Pen) {
     def checkCols(): Boolean = {
       for (line <- transposedIntContent) {
         if (line.contains(0)) {
-          println("line" + line)
+          //          println("line" + line)
           return false
         }
       }
       transposedIntContent.foreach(line => {
         if (line.distinct.length != 9) {
-          println("line.distinct" + line.distinct)
+          //          println("line.distinct" + line.distinct)
           return false
         }
       })
@@ -208,7 +209,7 @@ class Table(val content: List[List[Field]], val pen: Pen) {
       for (x <- List(0, 3, 6);
            y <- List(0, 3, 6)) {
         if (getSubMatrix(x, y).flatten.distinct.length != 9) {
-          print("submatrix"+getSubMatrix(x,y).distinct)
+          //          print("submatrix"+getSubMatrix(x,y).distinct)
           return false
         }
       }
@@ -248,18 +249,75 @@ class Table(val content: List[List[Field]], val pen: Pen) {
 
   def filterSubMatrix(): Table = ???
 
-  //    val intContent = this.mapToInts()
-  //    def getSubMatrix(x: Int, y: Int): List[List[Int]] = {
-  //      intContent.slice(x, x + 3).map(_.slice(y, y + 3))
-  //    }
-  //
-  //  }
+  def executeMoves(fileName: String, tab: Table = null): Table = {
+    val source = io.Source.fromFile(fileName)
+    val lines = source.getLines()
+    var ret = tab
+    if (ret == null){
+      ret = this
+    }
+    for (line <- lines) {
+      if (line.charAt(0) == '1' ||
+        line.charAt(0) == '2' ||
+        line.charAt(0) == '3' ||
+        line.charAt(0) == '4' ||
+        line.charAt(0) == '5' ||
+        line.charAt(0) == '6' ||
+        line.charAt(0) == '7' ||
+        line.charAt(0) == '8' ||
+        line.charAt(0) == '9') {
+        ret = ret.writeField(ret.pen.x, ret.pen.y, line.charAt(0))
+      }
+      else {
+        line match {
+          case "u" => ret = new Table(ret.content, ret.pen.goUp())
+          case "d" => ret = new Table(ret.content, ret.pen.goDown())
+          case "l" => ret = new Table(ret.content, ret.pen.goLeft())
+          case "r" => ret = new Table(ret.content, ret.pen.goRight())
+          case "-" =>
+            ret = ret.writeField(ret.pen.x, ret.pen.y, line.charAt(0))
+          case "+" =>
+            ret = ret.filterColumnAndRow()
+          case "*" =>
+            ret = ret.filterSubMatrix()
+          case "t" =>
+            ret = ret.transpose()
+          case "e" =>
+            ret = ret.exchange()
+          case _ => ret = executeMoves("input/"+line+".mvs", ret)
+        }
+      }
+      println(ret)
+    }
+    ret
+  }
+
+  def saveToFile(fileName: String): Unit = {
+    val ret = new StringBuilder()
+    for (lineIndex <- 0 until content.length) {
+      for (columnIndex <- 0 until content(lineIndex).length) {
+        if (lineIndex == pen.y && columnIndex == pen.x) {
+          ret.append('P')
+        }
+        else {
+          ret.append(content(lineIndex)(columnIndex).toString)
+        }
+      }
+      ret.append('\n')
+    }
+    //    for (line <- content) {
+    //      for (element <- line) {
+    //        ret.append(element.toString)
+    //      }
+    //      ret.append('\n')
+    //    }
+    new PrintWriter(fileName) {
+      write(ret.toString() + ".tbl")
+      close()
+    }
+  }
 
 
-  // filterSubMatrix()
-
-
-  // TODO executeMoves()
   // TODO isSolvable()
   // TODO createOpSequence()
   override def toString: String = {
